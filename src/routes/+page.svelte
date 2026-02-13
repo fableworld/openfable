@@ -7,8 +7,13 @@
 	import * as Card from '$lib/components/ui/card';
 	import { Image } from '@unpic/svelte';
 	import { Search } from 'lucide-svelte';
+    import { createVirtualizer } from '@tanstack/svelte-virtual';
+    import { onMount, unmount } from 'svelte';
 
 	let searchQuery = $state('');
+    let containerElement = $state<HTMLDivElement | null>(null);
+    let itemsPerRow = $state(4); // Default for desktop
+    let containerWidth = $state(0);
 
 	const characters = createQuery(() => ({
 		queryKey: ['characters'],
@@ -27,6 +32,41 @@
 				return dateB - dateA;
 			})
 	);
+
+    // Group items into rows
+    const rows = $derived.by(() => {
+        const result = [];
+        for (let i = 0; i < filteredCharacters.length; i += itemsPerRow) {
+            result.push(filteredCharacters.slice(i, i + itemsPerRow));
+        }
+        return result;
+    });
+
+    const virtualizer = createVirtualizer({
+        get count() { return rows.length; },
+        getScrollElement: () => containerElement,
+        estimateSize: () => 300, // Estimate height of a row
+        overscan: 5
+    });
+
+    onMount(() => {
+        const updateWidth = () => {
+            if (containerElement) {
+                containerWidth = containerElement.clientWidth;
+                if (containerWidth < 640) itemsPerRow = 2; // sm
+                else if (containerWidth < 1024) itemsPerRow = 3; // md
+                else itemsPerRow = 4; // lg
+            }
+        };
+        
+        const resizeObserver = new ResizeObserver(updateWidth);
+        if (containerElement) resizeObserver.observe(containerElement);
+        updateWidth();
+
+        return () => {
+            if (containerElement) resizeObserver.unobserve(containerElement);
+        };
+    });
 </script>
 
 <div class="container mx-auto p-4 max-w-7xl">
@@ -60,8 +100,12 @@
 			</div>
 		{:else}
 			<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-				{#each filteredCharacters as character}
-					<a href="/character/{character.id}" class="group">
+				{#each filteredCharacters as character (character.id)}
+					<a 
+                        href="/character/{character.id}" 
+                        class="group" 
+                        style="view-transition-name: char-card-{character.id}"
+                    >
 						<Card.Root class="overflow-hidden transition-all hover:ring-2 hover:ring-primary">
 							<div class="aspect-square relative overflow-hidden bg-muted">
 								<Image

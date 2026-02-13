@@ -31,9 +31,11 @@
 	},
 	"dependencies": {
 		"@tanstack/svelte-query": "^6.0.18",
+		"@tanstack/svelte-virtual": "^3.13.18",
 		"@unpic/svelte": "^1.0.1",
 		"bits-ui": "^2.15.5",
 		"clsx": "^2.1.1",
+		"html5-qrcode": "^2.3.8",
 		"idb": "^8.0.3",
 		"lucide-svelte": "^0.563.0",
 		"tailwind-merge": "^3.4.0",

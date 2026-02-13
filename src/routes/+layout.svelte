@@ -8,6 +8,8 @@
 	import { onMount } from 'svelte';
 	import { registryService } from '$lib/services/registry';
 	import { db } from '$lib/db';
+    import { DEFAULT_REGISTRY_URL } from '$lib/constants';
+    import { onNavigate } from '$app/navigation';
 
 	let { children } = $props();
 
@@ -29,7 +31,12 @@
 		// Check if any registry hasn't been updated in 3 days
 		const needsUpdate = registries.some(r => (now - (r.added_at || 0)) > THREE_DAYS_MS);
 		
-		if (needsUpdate || registries.length === 0) {
+		if (registries.length === 0) {
+            console.log('Initializing default registry...');
+            await registryService.fetchRegistry(DEFAULT_REGISTRY_URL);
+            queryClient.invalidateQueries({ queryKey: ['registries'] });
+            queryClient.invalidateQueries({ queryKey: ['characters'] });
+        } else if (needsUpdate) {
 			console.log('Triggering background registry update...');
 			registryService.updateAllRegistries().then(() => {
 				queryClient.invalidateQueries({ queryKey: ['registries'] });
@@ -37,6 +44,18 @@
 			});
 		}
 	});
+
+    // Enable View Transitions API
+    onNavigate((navigation) => {
+        if (!document.startViewTransition) return;
+
+        return new Promise((resolve) => {
+            document.startViewTransition(async () => {
+                resolve();
+                await navigation.complete;
+            });
+        });
+    });
 </script>
 
 <svelte:head>

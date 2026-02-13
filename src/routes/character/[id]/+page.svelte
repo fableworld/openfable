@@ -4,7 +4,7 @@
 	import { db } from '$lib/db';
 	import { Button } from '$lib/components/ui/button';
 	import { Image } from '@unpic/svelte';
-	import { ArrowLeft, Play, Download, Nfc, ExternalLink } from 'lucide-svelte';
+	import { ArrowLeft, Play, Download, Nfc, ExternalLink, Share2 } from 'lucide-svelte';
 	import { useNFC } from '$lib/hooks/useNFC.svelte';
     import * as Card from '$lib/components/ui/card';
     import Modal from '$lib/components/Modal.svelte';
@@ -14,7 +14,7 @@
 
 	const character = createQuery(() => ({
 		queryKey: ['character', id],
-		queryFn: () => db.getCharacter(id)
+		queryFn: async () => (await db.getCharacter(id)) || null
 	}));
 
     const nfc = useNFC();
@@ -28,35 +28,72 @@
             toast.error('Failed to copy payload');
         }
     }
+
+    async function handleShare(char: any) {
+        const url = new URL(window.location.origin + '/character');
+        url.searchParams.set('id', char.id);
+        // We need the registry URL. The character object from DB has it.
+        url.searchParams.set('registry', char.registry_url);
+        
+        const shareData = {
+            title: `OpenFable - ${char.name}`,
+            text: `Check out ${char.name} on OpenFable!`,
+            url: url.toString()
+        };
+
+        try {
+            if (navigator.share) {
+                await navigator.share(shareData);
+            } else {
+                await navigator.clipboard.writeText(url.toString());
+                toast.success('Link copied to clipboard');
+            }
+        } catch (err) {
+            // share cancelled or failed
+        }
+    }
+
+    const char = $derived(character.data);
 </script>
 
 <div class="container mx-auto p-4 max-w-4xl">
-    <Button variant="ghost" href="/" class="mb-4 pl-0 hover:bg-transparent hover:underline">
-        <ArrowLeft class="mr-2 h-4 w-4" /> Back to Gallery
-    </Button>
+    <div class="flex items-center justify-between mb-4">
+        <Button variant="ghost" href="/" class="pl-0 hover:bg-transparent hover:underline">
+            <ArrowLeft class="mr-2 h-4 w-4" /> Back to Gallery
+        </Button>
+        
+        {#if char}
+            <Button variant="outline" size="sm" onclick={() => handleShare(char)}>
+                <Share2 class="mr-2 h-4 w-4" /> Share
+            </Button>
+        {/if}
+    </div>
 
 	{#if character.isLoading}
-		<div class="animate-pulse space-y-4">
-            <div class="h-64 w-full bg-muted rounded-xl"></div>
-            <div class="h-8 w-1/2 bg-muted rounded"></div>
-            <div class="h-4 w-full bg-muted rounded"></div>
+		<div class="space-y-8 animate-pulse">
+            <div class="grid gap-6 md:grid-cols-2">
+                <div class="aspect-square rounded-xl bg-muted"></div>
+                <div class="space-y-4">
+                    <div class="h-8 w-3/4 rounded bg-muted"></div>
+                    <div class="h-4 w-1/4 rounded bg-muted"></div>
+                    <div class="h-24 w-full rounded bg-muted"></div>
+                </div>
+            </div>
         </div>
-	{:else if character.isError}
-		<div class="text-center py-12 text-red-500">
-			<p>Error loading character: {character.error?.message}</p>
-			<Button class="mt-4" variant="outline" href="/">Back to Gallery</Button>
-		</div>
-    {:else if !character.data}
-        <div class="text-center py-12 text-muted-foreground">
-			<p>Character not found (ID: {id})</p>
-			<Button class="mt-4" variant="outline" href="/">Back to Gallery</Button>
+	{:else if character.isError || !char}
+		<div class="text-center py-20">
+			<h2 class="text-2xl font-bold mb-4">Character Not Found</h2>
+			<p class="text-muted-foreground mb-8">The character you are looking for does not exist in your local database.</p>
+			<Button href="/">Back to Gallery</Button>
 		</div>
 	{:else}
-        {@const char = character.data}
 		<div class="space-y-8">
             <div class="grid gap-6 md:grid-cols-2">
                 <div class="space-y-4">
-                    <Card.Root class="overflow-hidden bg-muted">
+                    <Card.Root 
+                        class="overflow-hidden bg-muted" 
+                        style="view-transition-name: char-card-{id}"
+                    >
                         <Image 
                             src={char.gallery_images[0] || char.preview_image} 
                             alt={char.name}
