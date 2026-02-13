@@ -1,0 +1,32 @@
+{
+  "meta": {
+    "name": "Test Collection",
+    "version": "1.0.0",
+    "maintainer": "Tester"
+  },
+  "characters": [
+    {
+      "id": "test-char-1",
+      "name": "Test Warrior",
+      "description": "A brave warrior from the test kingdom.",
+      "preview_image": "https://picsum.photos/seed/warrior/400",
+      "gallery_images": ["https://picsum.photos/seed/warrior/800"],
+      "nfc_payload": "fable:warrior-1",
+      "models_3d": [
+        {
+          "provider": "makerworld",
+          "url": "https://makerworld.com/en/models/12345"
+        }
+      ]
+    },
+    {
+      "id": "test-char-2",
+      "name": "Test Mage",
+      "description": "A powerful mage with arcane knowledge.",
+      "preview_image": "https://picsum.photos/seed/mage/400",
+      "gallery_images": ["https://picsum.photos/seed/mage/800"],
+      "nfc_payload": "fable:mage-1",
+      "models_3d": []
+    }
+  ]
+}
