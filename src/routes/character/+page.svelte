@@ -68,20 +68,12 @@
         // Find the specific character in the fetched registry
         const char = fetchedRegistry.characters.find((c: any) => c.id === id);
         
-        if (char) {
-            // we temporarily add it to DB but WITHOUT adding the registry to the registries store?
-            // Actually, the detail page uses `db.getCharacter(id)`. 
-            // Better: Add the character to the characters store with a special flag/temporary property,
-            // OR just add it normally and it will be orphans if registry is not added.
-            // As per implementation plan, we add it normally but it won't show in any 'collection' list.
-            
-            for (const c of fetchedRegistry.characters) {
-                await db.addCharacter({ ...c, registry_url: registryUrl });
-            }
+        if (char && registryUrl) {
+            await db.addCharacters(registryUrl, fetchedRegistry.characters);
             
             toast.info('Viewing collection once (not added to library)');
             goto(`/character/${id}`);
-        } else {
+        } else if (!char) {
             error = "Character not found in this collection.";
         }
     }

@@ -14,7 +14,10 @@
 
 	const character = createQuery(() => ({
 		queryKey: ['character', id],
-		queryFn: async () => (await db.getCharacter(id)) || null
+		queryFn: async () => {
+            if (!id) return null;
+            return (await db.getCharacter(id)) || null;
+        }
 	}));
 
     const nfc = useNFC();

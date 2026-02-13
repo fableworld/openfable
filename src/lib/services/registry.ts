@@ -14,7 +14,7 @@ export const registryService = {
 			// Validate top-level metadata first
 			const metaResult = RegistrySchema.pick({ meta: true }).safeParse(json);
 			if (!metaResult.success) {
-				throw new Error(`Invalid registry metadata: ${metaResult.error.errors[0].message}`);
+				throw new Error(`Invalid registry metadata: ${metaResult.error.issues[0].message}`);
 			}
 
 			// Validate characters one by one to support partial failure
@@ -31,7 +31,7 @@ export const registryService = {
 				if (charResult.success) {
 					validCharacters.push(charResult.data);
 				} else {
-					errors.push(`Character "${char.name || 'unknown'}" skipped: ${charResult.error.errors[0].message}`);
+					errors.push(`Character "${char.name || 'unknown'}" skipped: ${charResult.error.issues[0].message}`);
 				}
 			}
 

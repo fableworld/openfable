@@ -41,8 +41,15 @@ To create a production version of your app:
 npm run build
 ```
 
-You can preview the production build with `npm run preview`.
-
 ## 📜 Registry Format
 
 OpenFable uses a simple JSON format for registries. See `public/test-registry.json` for an example of how to structure your own collection.
+
+## 🌐 Managing CORS for Custom Registries
+
+Since OpenFable is a client-side PWA, fetching registries from a different domain requires the remote server to allow CORS. If you encounter a "Failed to fetch" error, try these solutions:
+
+1.  **Host on GitHub**: Raw files from GitHub (`raw.githubusercontent.com`) automatically have CORS enabled.
+2.  **Add CORS Headers**: Ensure your server sends the header `Access-Control-Allow-Origin: *`.
+3.  **Static Hosting**: Platforms like Netlify, Vercel, and Cloudflare Pages allow you to configure CORS headers in a config file (e.g., `_headers` or `vercel.json`).
+4.  **S3/Bucket Storage**: If using AWS S3 or Google Cloud Storage, configure the CORS policy on the bucket to allow your application's origin.

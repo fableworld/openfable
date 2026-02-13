@@ -1,4 +1,4 @@
-import { openDB, type DBSchema } from 'idb';
+import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import { DB_NAME, DB_VERSION, DB_STORES } from './constants';
 import type { Registry, Character } from './schemas';
 
@@ -10,10 +10,11 @@ interface OpenFableDB extends DBSchema {
 	[DB_STORES.CHARACTERS]: {
 		key: string; // ID
 		value: Character & { registry_url: string };
+		indexes: { 'registry_url': string };
 	};
 }
 
-let dbPromise: Promise<any>;
+let dbPromise: Promise<IDBPDatabase<OpenFableDB>>;
 
 if (typeof window !== 'undefined') {
 	dbPromise = openDB<OpenFableDB>(DB_NAME, DB_VERSION, {
@@ -47,6 +48,21 @@ export const db = {
 
 		for (const char of registry.characters) {
 			await tx.objectStore(DB_STORES.CHARACTERS).put({
+				...char,
+				registry_url: url
+			});
+		}
+
+		await tx.done;
+	},
+
+	async addCharacters(url: string, characters: Character[]): Promise<void> {
+		const db = await dbPromise;
+		const tx = db.transaction(DB_STORES.CHARACTERS, 'readwrite');
+		const charStore = tx.objectStore(DB_STORES.CHARACTERS);
+
+		for (const char of characters) {
+			await charStore.put({
 				...char,
 				registry_url: url
 			});

@@ -82,7 +82,7 @@
                     </div>
                 </div>
 
-                <QRScanner onScan={(scannedUrl) => {
+                <QRScanner onScan={(scannedUrl: string) => {
                     url = scannedUrl;
                     addRegistry.mutate(scannedUrl);
                 }} />
