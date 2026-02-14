@@ -15,6 +15,7 @@
     // Registry details (if we fetch it)
     let fetchedRegistry = $state<any>(null);
     let error = $state<string | null>(null);
+    let viewingOnce = $state(false);
     
     const queryClient = useQueryClient();
 
@@ -63,18 +64,29 @@
 	});
 
     async function handleViewOnce() {
-        if (!id || !fetchedRegistry) return;
+        if (!id || !fetchedRegistry || viewingOnce) return;
+        viewingOnce = true;
         
-        // Find the specific character in the fetched registry
-        const char = fetchedRegistry.characters.find((c: any) => c.id === id);
-        
-        if (char && registryUrl) {
-            await db.addCharacters(registryUrl, fetchedRegistry.characters);
+        try {
+            // Find the specific character in the fetched registry
+            const char = fetchedRegistry.characters.find((c: any) => c.id === id);
             
-            toast.info('Viewing collection once (not added to library)');
-            goto(`/character/${id}`);
-        } else if (!char) {
-            error = "Character not found in this collection.";
+            if (char && registryUrl) {
+                // Svelte 5 proxies cannot be passed to IndexedDB structured clone
+                const characters = $state.snapshot(fetchedRegistry.characters);
+                await db.addCharacters(registryUrl, characters);
+                
+                toast.info('Viewing collection once (not added to library)');
+                goto(`/character/${id}`);
+            } else if (!char) {
+                error = "Character not found in this collection.";
+            }
+        } catch (e) {
+            console.error(e);
+            error = "An error occurred while preparing the view.";
+            toast.error("Failed to prepare character view");
+        } finally {
+            viewingOnce = false;
         }
     }
 </script>
@@ -106,8 +118,12 @@
                              Add Collection & View Character
                          {/if}
                      </Button>
-                     <Button variant="secondary" class="w-full" onclick={handleViewOnce}>
-                         View Character Once
+                     <Button variant="secondary" class="w-full" onclick={handleViewOnce} disabled={viewingOnce}>
+                         {#if viewingOnce}
+                             Loading...
+                         {:else}
+                             View Character Once
+                         {/if}
                      </Button>
                      <Button variant="outline" class="w-full" href="/">Cancel</Button>
                  </div>
