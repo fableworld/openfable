@@ -72,12 +72,14 @@
             const char = fetchedRegistry.characters.find((c: any) => c.id === id);
             
             if (char && registryUrl) {
-                // Svelte 5 proxies cannot be passed to IndexedDB structured clone
-                const characters = $state.snapshot(fetchedRegistry.characters);
-                await db.addCharacters(registryUrl, characters);
+                // Instead of adding to DB, navigate with registry URL in query string
+                // Detail page will fetch it on-the-fly
+                const url = new URL(`/character/${id}`, window.location.origin);
+                url.searchParams.set('registry', registryUrl);
+                url.searchParams.set('viewOnce', 'true');
                 
                 toast.info('Viewing collection once (not added to library)');
-                goto(`/character/${id}`);
+                goto(url.toString());
             } else if (!char) {
                 error = "Character not found in this collection.";
             }

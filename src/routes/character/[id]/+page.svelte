@@ -2,6 +2,7 @@
 	import { page } from '$app/stores';
 	import { createQuery } from '@tanstack/svelte-query';
 	import { db } from '$lib/db';
+	import { registryService } from '$lib/services/registry';
 	import { Button } from '$lib/components/ui/button';
 	import { Image } from '@unpic/svelte';
 	import { ArrowLeft, Play, Download, Nfc, ExternalLink, Share2 } from 'lucide-svelte';
@@ -9,6 +10,8 @@
     import * as Card from '$lib/components/ui/card';
     import Modal from '$lib/components/Modal.svelte';
     import { toast } from 'svelte-sonner';
+    import { createMutation, useQueryClient } from '@tanstack/svelte-query';
+    import { goto } from '$app/navigation';
     let { data } = $props();
 	const id = $derived($page.params.id);
 
@@ -57,10 +60,68 @@
         }
     }
 
+    const queryClient = useQueryClient();
+
+    const addRegistry = createMutation(() => ({
+        mutationFn: async (url: string) => {
+            await registryService.fetchRegistry(url);
+        },
+        onSuccess: () => {
+            toast.success('Collection added to your library');
+            queryClient.invalidateQueries({ queryKey: ['character', id] });
+            queryClient.invalidateQueries({ queryKey: ['registries'] });
+            queryClient.invalidateQueries({ queryKey: ['characters'] });
+            
+            // Navigate to same page but without search params
+            goto(`/character/${id}`, { replaceState: true });
+        },
+        onError: (err) => {
+            toast.error('Failed to add collection: ' + (err instanceof Error ? err.message : String(err)));
+        }
+    }));
+
+    async function handleAddCollection() {
+        if (!char?.registry_url) return;
+        
+        // Check if already in DB (maybe added in another window)
+        const existing = await registryService.getRegistryFromDB(char.registry_url);
+        if (existing) {
+            toast.info('Collection was already in your library');
+            // Just clean up the URL
+            goto(`/character/${id}`, { replaceState: true });
+            return;
+        }
+
+        addRegistry.mutate(char.registry_url);
+    }
+
     const char = $derived(character.data);
+    const isViewOnce = $derived($page.url.searchParams.get('viewOnce') === 'true');
 </script>
 
 <div class="container mx-auto p-4 max-w-4xl">
+    {#if isViewOnce}
+        <div class="bg-blue-50 border border-blue-200 text-blue-800 p-3 rounded-lg mb-6 flex items-center justify-between">
+            <div class="flex items-center">
+                <ExternalLink class="w-4 h-4 mr-2" />
+                <span class="text-sm font-medium">Temporary View: This character is not in your collection.</span>
+            </div>
+            <Button 
+                variant="outline" 
+                size="sm" 
+                class="h-8 border-blue-300 text-blue-800 hover:bg-blue-100" 
+                onclick={handleAddCollection}
+                disabled={addRegistry.isPending}
+            >
+                {#if addRegistry.isPending}
+                    Adding...
+                {:else}
+                    Add Collection
+                {/if}
+            </Button>
+        </div>
+    {/if}
+
     <div class="flex items-center justify-between mb-4">
         <Button variant="ghost" href="/" class="pl-0 hover:bg-transparent hover:underline">
             <ArrowLeft class="mr-2 h-4 w-4" /> Back to Gallery

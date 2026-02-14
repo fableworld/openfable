@@ -8,14 +8,15 @@ export const Model3DSchema = z.object({
 export const CharacterSchema = z.object({
 	id: z.string(),
 	name: z.string().min(1, 'Name is required'),
-	created_at: z.string().datetime().optional(), // ISO 8601
-	preview_image: z.string().url().optional(),
+	created_at: z.iso.datetime().optional(), // ISO 8601
+	preview_image: z.url().optional(),
     description: z.string().optional(),
-	gallery_images: z.array(z.string().url()).optional().default([]),
-	audio_sample_url: z.string().url().optional(),
-	audio_zip_url: z.string().url().optional(),
+	gallery_images: z.array(z.url()).optional().default([]),
+	audio_sample_url: z.url().optional(),
+	audio_zip_url: z.url().optional(),
 	models_3d: z.array(Model3DSchema).optional().default([]),
-	nfc_payload: z.string().optional()
+	nfc_payload: z.string().optional(),
+	registry_url: z.url().optional()
 });
 
 export const RegistryMetaSchema = z.object({
