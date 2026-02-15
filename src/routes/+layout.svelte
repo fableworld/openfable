@@ -1,7 +1,7 @@
 <script lang="ts">
 	import '../app.css';
 	import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query';
-	import Header from '$lib/components/Header.svelte';
+	import FloatingNav from '$lib/components/FloatingNav.svelte';
 	import { Toaster } from '$lib/components/ui/sonner';
 	import { ModeWatcher } from 'mode-watcher';
 
@@ -66,10 +66,10 @@
 <Toaster position="top-center" richColors />
 
 <QueryClientProvider client={queryClient}>
-	<div class="min-h-screen bg-background flex flex-col">
-		<Header />
+	<div class="min-h-screen bg-background flex flex-col pb-24">
 		<main class="flex-1">
 			{@render children()}
 		</main>
+		<FloatingNav />
 	</div>
 </QueryClientProvider>
