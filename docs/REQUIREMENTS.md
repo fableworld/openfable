@@ -88,6 +88,27 @@ Clicking a character opens a detailed view containing:
 3. **If Unknown:** A prompt appears: *"This character belongs to a new collection. Do you want to add 'User Repo' to your library?"* (Options: Add, View Once, Cancel).
 4. **If Known:** Directly opens the detail page.
 5. **Error Handling:** If the registry is 404 or the ID doesn't exist, show a friendly "Character not found" page.
+    
+### 3.5 Deep Linking & QR Scanning
+
+The application must handle specific actions via deep links, which can be triggered by opening a URL or scanning a QR code.
+
+* **QR Code Scanner:**
+    * A dedicated scan page allowing users to scan QR codes.
+    * **Logic:** The scanner ignores the host and protocol of the scanned URL and focuses on the path and query parameters to determine the action.
+    * **Redirect:** Valid paths are automatically redirected to the corresponding app route.
+
+* **Actions:**
+    * **Character Link:** Standard character share link (as defined in 3.4).
+    * **Collection Import (`/coll-imp?url=...`):**
+        *   **Validation:** Fetches and validates the registry JSON (same logic as manual import).
+        *   **Confirmation:** Displays a confirmation screen with metadata (Name, Author, Version, Description, Character Count).
+        *   **Action:** User confirms -> Registry is imported -> Redirect to Gallery with success toast.
+    *   **NFC Write (`/nfc-write?payl=...`):**
+        *   **UI:** Displays the payload to be written.
+        *   **Feature Detection:** Checks for WebNFC support.
+        *   **Supported:** "Write to Tag" button triggers NFC write (after confirmation).
+        *   **Unsupported:** Displays manual write instructions (same as character detail view).
 
 
 

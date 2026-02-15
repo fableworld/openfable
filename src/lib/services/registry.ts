@@ -3,7 +3,7 @@ import { db } from '../db';
 import { z } from 'zod';
 
 export const registryService = {
-	async fetchRegistry(url: string): Promise<Registry> {
+	async fetchAndValidate(url: string): Promise<Registry> {
 		try {
 			const res = await fetch(url);
 			if (!res.ok) {
@@ -48,15 +48,22 @@ export const registryService = {
 				characters: validCharacters
 			};
 			
-			// Save to DB
-			await db.addRegistry(url, registry);
-			
 			return registry;
 		} catch (err: unknown) {
 			console.error('Registry fetch error:', err);
 			if (err instanceof Error) throw err;
 			throw new Error('An unknown error occurred during registry fetch');
 		}
+	},
+
+	async saveRegistry(url: string, registry: Registry): Promise<void> {
+		await db.addRegistry(url, registry);
+	},
+
+	async fetchRegistry(url: string): Promise<Registry> {
+		const registry = await this.fetchAndValidate(url);
+		await this.saveRegistry(url, registry);
+		return registry;
 	},
 	
 	async getRegistryFromDB(url: string): Promise<Registry | undefined> {
