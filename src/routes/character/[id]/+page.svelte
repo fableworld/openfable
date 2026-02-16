@@ -5,11 +5,12 @@
 	import { registryService } from '$lib/services/registry';
 	import { Button } from '$lib/components/ui/button';
 	import { Image } from '@unpic/svelte';
-	import { ArrowLeft, Play, Download, Nfc, ExternalLink, Share2 } from 'lucide-svelte';
+	import { ArrowLeft, Play, Download, Nfc, ExternalLink, Share2, Check } from 'lucide-svelte';
 	import { useNFC } from '$lib/hooks/useNFC.svelte';
     import * as Card from '$lib/components/ui/card';
     import Modal from '$lib/components/Modal.svelte';
-    import { toast } from 'svelte-sonner';
+	import { toast } from 'svelte-sonner';
+    import { cn } from '$lib/utils';
     import { createMutation, useQueryClient } from '@tanstack/svelte-query';
     import { goto } from '$app/navigation';
     let { data } = $props();
@@ -157,9 +158,9 @@
                     </Card.Root>
                     
                     {#if char.gallery_images && char.gallery_images.length > 1}
-                        <div class="grid grid-cols-4 gap-2">
+                        <div class="grid grid-cols-4 gap-3">
                             {#each char.gallery_images as img}
-                                <div class="aspect-square bg-muted rounded-md overflow-hidden border">
+                                <div class="aspect-square bg-muted rounded-xl overflow-hidden border border-border shadow-xs hover:scale-105 transition-transform">
                                     <Image src={img} alt="" layout="fullWidth" class="object-cover h-full" />
                                 </div>
                             {/each}
@@ -169,66 +170,90 @@
 
                 <div class="space-y-6">
                     <div>
-                        <h1 class="text-3xl font-bold">{char.name}</h1>
-                        <p class="text-muted-foreground mt-2">{char.description || 'No description available.'}</p>
+                        <h1 class="text-4xl font-extrabold tracking-tight">{char.name}</h1>
+                        <p class="text-lg text-muted-foreground mt-4 leading-relaxed">{char.description || 'No description available.'}</p>
                     </div>
 
-                    <div class="flex flex-wrap gap-2">
+                    <div class="space-y-4">
                         {#if char.audio_sample_url}
-                            <div class="flex items-center space-x-2 w-full p-3 border rounded-lg bg-card">
-                                <Button size="icon" variant="ghost">
-                                    <Play class="h-4 w-4" />
+                            <div class="glass-panel flex items-center space-x-4 p-4 rounded-[20px] shadow-sm">
+                                <Button size="icon" variant="secondary" class="shrink-0 rounded-full shadow-sm">
+                                    <Play class="size-5 ml-1" />
                                 </Button>
                                 <div class="flex-1 min-w-0">
-                                    <p class="text-sm font-medium">Preview Audio</p>
-                                    <audio src={char.audio_sample_url} controls class="w-full h-8 mt-1"></audio>
+                                    <p class="text-sm font-semibold mb-2">Preview Audio</p>
+                                    <audio src={char.audio_sample_url} controls class="w-full h-8 accent-brand-indigo"></audio>
                                 </div>
                             </div>
                         {/if}
                         
                         {#if char.audio_zip_url}
-                            <Button variant="outline" class="w-full" href={char.audio_zip_url} target="_blank">
-                                <Download class="mr-2 h-4 w-4" /> Download Audio Assets (.zip)
+                            <Button variant="outline" class="w-full text-brand-indigo rounded-[20px] h-12" href={char.audio_zip_url} target="_blank">
+                                <Download class="mr-2 size-5" /> Download Audio Assets (.zip)
                             </Button>
                         {/if}
                     </div>
 
-                    <div class="space-y-4 pt-4 border-t">
-                        <h3 class="font-semibold flex items-center">
-                            <Nfc class="mr-2 h-4 w-4" /> Write to Tag
+                    <div class="pt-6 border-t">
+                        <h3 class="font-bold text-lg flex items-center mb-4 text-brand-indigo">
+                            <Nfc class="mr-2 size-5" /> The Magic Touch
                         </h3>
                         
-                        <div class="space-y-2">
-                            {#if nfc.status === 'unsupported'}
+                        {#if nfc.status === 'unsupported'}
+                            <!-- Static Button for Unsupported State -->
+                            <div class="w-full py-4">
                                 <Button 
                                     variant="secondary" 
-                                    class="w-full h-12 text-lg" 
+                                    class="w-full h-14 text-lg rounded-full shadow-sm border border-border" 
                                     onclick={() => showNFCModal = true}
                                 >
                                     How to Write Tag
                                 </Button>
-                            {:else}
+                            </div>
+                        {:else}
+                            <!-- Mobile Sticky Container / Desktop Static -->
+                            <div class="fixed bottom-24 left-4 right-4 z-40 md:static md:z-auto md:w-full">
                                 <Button 
-                                    class="w-full h-12 text-lg" 
+                                    variant="magic" 
+                                    class={cn(
+                                        "w-full h-14 text-xl transition-all duration-500 shadow-xl md:shadow-md magic-hover relative overflow-hidden",
+                                        nfc.status === 'success' && "bg-spark-teal shadow-spark-teal/20 w-14 rounded-full p-0 mx-auto block"
+                                    )}
                                     disabled={nfc.status === 'scanning' || nfc.status === 'writing'}
                                     onclick={() => char.nfc_payload && nfc.write(char.nfc_payload)}
                                 >
                                     {#if nfc.status === 'scanning'}
-                                        Approach Tag...
+                                        <div class="flex items-center justify-center gap-3">
+                                            <span class="animate-pulse">Approach Tag...</span>
+                                        </div>
                                     {:else if nfc.status === 'writing'}
-                                        Writing...
+                                        <div class="flex items-center justify-center gap-3">
+                                            <Nfc class="animate-spin" />
+                                            <span>Writing...</span>
+                                        </div>
+                                    {:else if nfc.status === 'success'}
+                                        <div class="flex items-center justify-center size-full animate-in zoom-in">
+                                            <Check class="size-8 text-white animate-draw" />
+                                        </div>
                                     {:else}
-                                        Write to Tag
+                                        <div class="flex items-center justify-center gap-2">
+                                            <Nfc class="size-6" />
+                                            <span>Write to Tag</span>
+                                        </div>
                                     {/if}
                                 </Button>
+                                
                                 {#if nfc.error}
-                                    <p class="text-xs text-red-500">{nfc.error}</p>
+                                    <div class="absolute -top-16 left-0 right-0 md:static md:mt-2 pointer-events-none">
+                                        <p class="text-sm text-white bg-destructive/90 backdrop-blur px-4 py-2 rounded-full mx-auto w-fit font-medium text-center animate-in fade-in slide-in-from-bottom-2 md:text-destructive md:bg-transparent md:p-0 shadow-lg">
+                                            {nfc.error}
+                                        </p>
+                                    </div>
                                 {/if}
-                                {#if nfc.status === 'success'}
-                                    <p class="text-xs text-green-600 font-medium text-center">Successfully written!</p>
-                                {/if}
-                            {/if}
-                        </div>
+                            </div>
+                            <!-- Spacer for Mobile Sticky Button -->
+                            <div class="h-24 md:hidden"></div>
+                        {/if}
                     </div>
                 </div>
             </div>

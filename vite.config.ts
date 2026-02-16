@@ -15,8 +15,8 @@ export default defineConfig({
 				name: 'OpenFable',
 				short_name: 'OpenFable',
 				description: 'Decentralized manager for custom audio characters',
-				theme_color: '#3b82f6',
-				background_color: '#ffffff',
+				theme_color: '#F8FAFC',
+				background_color: '#F8FAFC',
 				display: 'standalone',
 				icons: [
 					{

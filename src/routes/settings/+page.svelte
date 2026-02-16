@@ -60,16 +60,16 @@
 <div class="container mx-auto p-4 max-w-2xl">
 	<h1 class="text-3xl font-bold mb-6">Settings</h1>
 
-	<Card.Root class="mb-8">
-		<Card.Header>
+	<Card.Root class="mb-8 overflow-hidden">
+		<Card.Header class="p-6 pb-2">
 			<Card.Title>Add Registry</Card.Title>
 		</Card.Header>
-		<Card.Content>
-			            <form onsubmit={handleSubmit} class="space-y-4">
-                <div class="space-y-2">
+		<Card.Content class="p-6 pt-2">
+			<form onsubmit={handleSubmit} class="space-y-6">
+                <div class="space-y-3">
                     <Label for="url">Registry JSON URL</Label>
                     <div class="flex gap-2">
-                        <Input id="url" type="url" placeholder="https://..." bind:value={url} required />
+                        <Input id="url" type="url" placeholder="https://..." bind:value={url} required class="h-11" />
                     </div>
                 </div>
 
@@ -82,18 +82,22 @@
                     </div>
                 </div>
 
-                <QRScanner onScan={(scannedUrl: string) => {
-                    url = scannedUrl;
-                    addRegistry.mutate(scannedUrl);
-                }} />
+                <div class="space-y-4">
+                    <div class="bg-muted/30 rounded-xl overflow-hidden border">
+                         <QRScanner onScan={(scannedUrl: string) => {
+                            url = scannedUrl;
+                            addRegistry.mutate(scannedUrl);
+                        }} />
+                    </div>
 
-                <Button type="submit" class="w-full" disabled={addRegistry.isPending}>
-                    {#if addRegistry.isPending}
-                        Adding...
-                    {:else}
-                        Add Registry
-                    {/if}
-                </Button>
+                    <Button type="submit" class="w-full h-12 text-base rounded-xl cursor-pointer" disabled={addRegistry.isPending}>
+                        {#if addRegistry.isPending}
+                            Adding...
+                        {:else}
+                            Add Registry
+                        {/if}
+                    </Button>
+                </div>
             </form>
 		</Card.Content>
 	</Card.Root>
@@ -113,25 +117,27 @@
             {/if}
         </Button>
     </div>
-	<Card.Content>
+	<Card.Content class="p-6">
             {#if registries.isLoading}
                 <p class="text-center py-4 text-muted-foreground">Loading registries...</p>
             {:else if registries.isError}
-                <p class="text-center py-4 text-red-500">Error: {registries.error?.message}</p>
+                <p class="text-center py-4 text-destructive">Error: {registries.error?.message}</p>
             {:else if !registries.data || registries.data.length === 0}
-                <p class="text-center py-4 text-muted-foreground">No registries added yet.</p>
+                <div class="text-center py-8 bg-muted/30 rounded-xl border border-dashed border-border">
+                    <p class="text-muted-foreground">No registries added yet.</p>
+                </div>
             {:else}
                 <div class="space-y-4">
                     {#each registries.data as registry}
-                        <div class="flex items-center justify-between p-3 border rounded-lg">
-                            <div class="flex-1 min-w-0">
-                                <p class="font-medium truncate">{registry.meta.name}</p>
+                        <div class="flex items-center justify-between p-4 border rounded-xl bg-card/50 hover:bg-card/80 transition-colors">
+                            <div class="flex-1 min-w-0 mr-4">
+                                <p class="font-bold text-base truncate">{registry.meta.name}</p>
                                 <p class="text-sm text-muted-foreground truncate">{registry.url}</p>
                             </div>
                             <Button 
                                 variant="ghost" 
                                 size="sm" 
-                                class="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                class="text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
                                 onclick={() => removeRegistry.mutate(registry.url)}
                                 disabled={removeRegistry.isPending}
                             >
