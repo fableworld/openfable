@@ -212,7 +212,7 @@
                             </div>
                         {:else}
                             <!-- Mobile Sticky Container / Desktop Static -->
-                            <div class="fixed bottom-24 left-4 right-4 z-40 md:static md:z-auto md:w-full">
+                            <div class="w-full py-4">
                                 <Button 
                                     variant="magic" 
                                     class={cn(
